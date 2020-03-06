@@ -2,11 +2,12 @@
 
 import requests 
 import hashlib
-
+import sys
 
 #we should send the hash file usually, not the password itself (it is not secure), and we only provide the first five characters of the API
 
 # response 400 - means something is wrong with the API
+
 
 def request_api_data(query_char):
   url = 'https://api.pwnedpasswords.com/range/'+ query_char
@@ -18,7 +19,9 @@ def request_api_data(query_char):
 def get_password_leaks_count(hashes, hash_to_check):
   hashes = (line.split(':') for line in hashes.text.splitlines())
   for h, count in hashes:
-    print(h, count)
+    if h == hash_to_check:
+      return count
+  return 0
 
 
 def pwned_api_check(password):
@@ -28,9 +31,19 @@ def pwned_api_check(password):
   # in the first variable we will store the first 5 characters, and in the second variable, we will store the remaining characters of the hash
 
   response = request_api_data(first5_char)
-  print(response)
   return get_password_leaks_count(response, tail)
 
-pwned_api_check('123')
+def main(args):
+  for password in args:
+    count = pwned_api_check(password)
+    if count:
+      print(f'{password} was found {count} times.. You should probably change your password!')
+    else:
+      print(f'{password} was NOT found.Carry on!')
+  return('done!')
 
+
+if __name__ == '__main__':
+  sys.exit(main(sys.argv[1:]))
+  
 
